@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nokia 3310 Snake Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=VT323&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div
+      class="listBox"
+      style="
+        display: flex;
+        position: absolute;
+        left: 500px;
+        top: 200px;
+        font-size: 30px;
+        color: #8b966c;
+      "
+    >
+      <div
+        id="highScoreForm"
+        style="
+          display: flex;
+          position: absolute;
+          flex-direction: column;
+          top: -70px;
+          left: -1px;
+          background-color: #414141;
+          border-radius: 15px;
+          padding: 2px;
+        "
+      >
+        <input
+          type="text"
+          id="username"
+          placeholder="Enter your name"
+          maxlength="8"
+          style="
+            border-radius: 5px;
+            height: 40px;
+            background-color: #414141;
+            color: white;
+            font-family: vt323;
+            border-style: none;
+            font-size: 20px;
+            border-bottom: 3px solid #8b966c;
+            border-left: 1px solid #8b966c;
+          "
+        />
+      </div>
+
+      <div
+        class="list"
+        style="
+          border-style: dotted;
+          border-radius: 20px;
+          border-top-left-radius: 10%;
+          border-top-right-radius: 10%;
+        "
+      >
+        <h3 style="text-decoration: underline; position: relative; top: -15px">
+          High Scores
+        </h3>
+        <ul style="list-style: none" id="ulList">
+          <li id="1"></li>
+          <li id="2"></li>
+          <li id="3"></li>
+          <li id="4"></li>
+          <li id="5"></li>
+          <li id="6"></li>
+          <li id="7"></li>
+          <li id="8"></li>
+          <li id="9"></li>
+          <li id="10"></li>
+        </ul>
+      </div>
+    </div>
+    <body>
+      <div class="scores">
+        <div class="score">0</div>
+        <h4 class="sneek">Take a sneek around</h4>
+        <div class="highScore">0</div>
+      </div>
+
+      <div class="game-1">
+        <div class="game-2">
+          <div class="game-3">
+            <div id="game-board"></div>
+          </div>
+        </div>
+      </div>
+      <h2 id="instructions">Space to start Sneeking</h2>
+      <img src="/public/snake-game-ai-gen.png" id="snakeLogo" alt="SnakeLogo" />
+    </body>
+
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        font-family: "VT323", monospace;
+        flex-direction: column;
+      }
+      body,
+      .snake {
+        background-color: #414141;
+      }
+      #game-board {
+        border-radius: 100px;
+        display: grid;
+        grid-template-columns: repeat(20, 20px);
+        grid-template-rows: repeat(20, 20px);
+        margin: 5px;
+      }
+      .game-1 {
+        border: #595f43 solid 10px;
+        border-radius: 30px;
+        box-shadow: inset 0 0 0 10px #8b966c;
+      }
+      .game-2 {
+        border: #abb48a solid 6px;
+        border-radius: 25px;
+        box-shadow: inset 0 0 0 10px #8b966c;
+      }
+      .game-3 {
+        border: #8b966c solid 5px;
+        border-radius: 20px;
+        box-shadow: inset 0 0 0 10px #8b966c;
+      }
+      #instructions {
+        position: relative;
+        bottom: 150px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 35px;
+      }
+      .scores {
+        position: absolute;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-evenly;
+        width: 400px;
+        top: 120px;
+      }
+
+      .score,
+      .highScore,
+      .sneek {
+        background-color: #d8ddca;
+        font-size: 30px;
+        font-weight: bolder;
+        margin: 10px 0;
+        padding: 10px;
+        border-radius: 13px;
+      }
+      .game-3,
+      #snakeLogo {
+        background-color: #c4cfa3;
+      }
+      .snake {
+        border: #5a5a5a dotted 1px;
+      }
+      .fruit {
+        background-color: #dedede;
+        border: #999 5px solid;
+      }
+      #snakeLogo {
+        position: absolute;
+        top: 270px;
+      }
+      #ulList {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+    <script>
+      const board = document.getElementById("game-board");
+      const scoreDisplay = document.querySelector(".score");
+      const highScoreDisplay = document.querySelector(".highScore");
+      const sneek = document.querySelector(".sneek");
+      const snakeLogo = document.getElementById("snakeLogo");
+      const instructions = document.getElementById("instructions");
+      const gridSize = 20;
+      let score = 0;
+      let highScore = 0;
+      //define
+      let snake = [{ x: 10, y: 10 }];
+      let fruit = generateFruit();
+      let direction = "d";
+      let gameInterval;
+      let gameDelay = 200;
+      let gameStarted = false;
+      let currentHighScore = 0;
+      const nickNameInput = document.getElementById("nickname");
+
+      //localStorage.setItem("highScore", 0);  // for test purposes only - to reset high score to 0
+
+      function updateScoreBoard() {
+        //update high score and put name on score board
+        const inputFormName = document.getElementById("username").value;
+        const savedHighScore = localStorage.getItem("highScore");
+        const li = document.querySelectorAll("li");
+        for (let i = 0; i < li.length; i++) {
+          const element = li[i];
+          if (element.innerHTML === "") {
+            const sortedSavedHighScores = [...li]
+              .map((elem) => parseInt(elem.innerHTML.split(": ")[1]))
+              .sort((a, b) => b - a);
+            if (inputFormName === "") {
+              element.innerHTML = "unkn: " + savedHighScore;
+              return;
+            }
+            element.innerHTML = inputFormName + ": " + savedHighScore;
+            return;
+          }
+        }
+      }
+
+      ////////////////////////////////////////////////////////////////////////////////////////////
+
+      function draw() {
+        board.innerHTML = "";
+        drawSnake();
+        ProvjeriSudar();
+        drawFruit();
+        updateScore();
+      }
+
+      function drawSnake() {
+        if (gameStarted) {
+          snake.forEach((seg) => {
+            const snakeElem = createGameElement("div", "snake");
+            setPosition(snakeElem, seg);
+            board.appendChild(snakeElem);
+          });
+        }
+      }
+      function createGameElement(tag, className) {
+        const elem = document.createElement(tag);
+        elem.className = className;
+        return elem;
+        console.log(elem);
+      }
+      function setPosition(elem, position) {
+        elem.style.gridColumn = position.x;
+        elem.style.gridRow = position.y;
+      }
+      function drawFruit() {
+        if (gameStarted) {
+          const fruitElem = createGameElement("div", "fruit");
+          setPosition(fruitElem, fruit);
+          board.appendChild(fruitElem);
+        }
+      }
+      function generateFruit() {
+        const x = Math.floor(Math.random() * gridSize) + 1;
+        const y = Math.floor(Math.random() * gridSize) + 1;
+        return { x, y };
+      }
+      /////RRRUUUNN
+      // draw();
+      /////RRRUUUNN
+
+      function move() {
+        const head = { ...snake[0] };
+        switch (direction) {
+          case "w":
+            head.y--;
+            break;
+          case "s":
+            head.y++;
+            break;
+          case "a":
+            head.x--;
+            break;
+          case "d":
+            head.x++;
+            break;
+        }
+
+        snake.unshift(head);
+
+        if (head.x === fruit.x && head.y === fruit.y) {
+          fruit = generateFruit();
+          SpeedUp();
+          clearInterval(gameInterval);
+          gameInterval = setInterval(() => {
+            move();
+            draw();
+          }, gameDelay);
+
+          score++;
+          scoreDisplay.textContent = score;
+        } else {
+          snake.pop();
+        }
+      }
+      function startGame() {
+        score = 0;
+        gameStarted = true;
+        instructions.style.display = "none";
+        sneek.style.display = "flex";
+        snakeLogo.style.display = "none";
+        gameInterval = setInterval(() => {
+          move();
+          draw();
+        }, gameDelay);
+      }
+      function KeeyPressToStart() {
+        if (
+          (!gameStarted && event.code === "Space") ||
+          (!gameStarted && event.key === "")
+        ) {
+          startGame();
+        } else {
+          switch (event.key) {
+            case "w":
+              direction = "w";
+              break;
+            case "s":
+              direction = "s";
+              break;
+            case "a":
+              direction = "a";
+              break;
+            case "d":
+              direction = "d";
+              break;
+          }
+        }
+      }
+      document.addEventListener("keydown", KeeyPressToStart);
+
+      function SpeedUp() {
+        if (gameDelay > 150) {
+          gameDelay -= 5;
+        } else if (gameDelay > 100) {
+          gameDelay -= 4;
+        } else if (gameDelay > 70) {
+          gameDelay -= 3;
+        } else if (gameDelay > 50) {
+          gameDelay -= 2;
+        } else if (gameDelay > 25) {
+          gameDelay -= 2;
+        } else if (gameDelay > 20) {
+          gameDelay -= 1;
+        }
+      }
+      function ProvjeriSudar() {
+        const head = snake[0];
+        if (
+          head.x < 1 ||
+          head.x > gridSize ||
+          head.y < 1 ||
+          head.y > gridSize
+        ) {
+          restartAll();
+        }
+        for (let i = 1; i < snake.length; i++) {
+          if (head.x === snake[i].x && head.y === snake[i].y) {
+            restartAll();
+          }
+        }
+      }
+      function restartAll() {
+        updateHighScore();
+        stopGame();
+        snake = [{ x: 10, y: 10 }];
+        fruit = generateFruit();
+        direction = "d";
+        gameDelay = 200;
+        updateScore();
+      }
+      function updateScore() {
+        const score = snake.length - 1;
+        scoreDisplay.textContent = score;
+      }
+      function updateHighScore() {
+        const currentHighScore = parseInt(highScoreDisplay.textContent);
+        if (score > currentHighScore) {
+          localStorage.setItem("highScore", score);
+          highScoreDisplay.textContent = score;
+          console.log("Score: " + score, "HighScore: " + score);
+        }
+      }
+
+      // On entire PageLoad retrieve high score from local storage
+      window.addEventListener("load", () => {
+        const savedHighScore = localStorage.getItem("highScore");
+        if (savedHighScore) {
+          highScoreDisplay.textContent = savedHighScore;
+        }
+      });
+
+      // Save high score to local storage when the game ends
+      function stopGame() {
+        clearInterval(gameInterval);
+        gameStarted = false;
+        instructions.style.display = "flex";
+        sneek.style.display = "flex";
+        snakeLogo.style.display = "block";
+        updateHighScore(); // Save the high score
+        updateScoreBoard();
+      }
+
+      // --for future use
+      // -function pauseGame, resumeGame, restartGame
+      // -list of high scores with names, color and self-assigned passwords
+      // that you can play only if you know the password, and continue playing on your account
+      // with your high score, and your name
+    </script>
+  </body>
+</html>
