@@ -206,26 +206,40 @@
       let currentHighScore = 0;
       const nickNameInput = document.getElementById("nickname");
 
-      //localStorage.setItem("highScore", 0);  // for test purposes only - to reset high score to 0
+      //localStorage.setItem("highScore", 0); // for test purposes only - highscore reset
 
+      //updates the high score board
       function updateScoreBoard() {
-        //update high score and put name on score board
-        const inputFormName = document.getElementById("username").value;
-        const savedHighScore = localStorage.getItem("highScore");
-        const li = document.querySelectorAll("li");
-        for (let i = 0; i < li.length; i++) {
-          const element = li[i];
-          if (element.innerHTML === "") {
-            const sortedSavedHighScores = [...li]
-              .map((elem) => parseInt(elem.innerHTML.split(": ")[1]))
-              .sort((a, b) => b - a);
-            if (inputFormName === "") {
-              element.innerHTML = "unkn: " + savedHighScore;
-              return;
-            }
-            element.innerHTML = inputFormName + ": " + savedHighScore;
-            return;
+        const inputFormName = document.getElementById("username").value.trim() || "Unkn";
+        const savedHighScore = parseInt(localStorage.getItem("highScore")) || 0;
+
+        // Retrieve all list items and map them to an array of scores
+        const liElements = document.querySelectorAll("li");
+        const scores = Array.from(liElements)
+          .map((li) => {
+            const parts = li.innerHTML.split(": ");
+            return parts[1]
+              ? { name: parts[0].trim(), score: parseInt(parts[1]) }
+              : null;
+          })
+          .filter((score) => score !== null); // Remove any empty or undefined entries
+
+        // Add the new score to the scores array
+        scores.push({ name: inputFormName, score: savedHighScore });
+
+        // Sort the scores array in descending order based on the score
+        scores.sort((a, b) => b.score - a.score);
+
+        // Update the list items with the sorted scores
+        scores.forEach((score, index) => {
+          if (index < liElements.length) {
+            liElements[index].innerHTML = `${score.name}: ${score.score}`;
           }
+        });
+
+        // Clear any remaining list items if there are more li elements than scores
+        for (let i = scores.length; i < liElements.length; i++) {
+          liElements[i].innerHTML = "";
         }
       }
 
@@ -413,7 +427,7 @@
         sneek.style.display = "flex";
         snakeLogo.style.display = "block";
         updateHighScore(); // Save the high score
-        updateScoreBoard();
+        updateScoreBoard(); //update high score and / put name on score board
       }
 
       // --for future use
